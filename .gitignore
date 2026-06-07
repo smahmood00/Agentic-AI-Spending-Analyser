@@ -10,6 +10,6 @@ metrics.json
 report.md
 data/merchant_labels.json
 .DS_Store
-data/
+data/*
 output/
 .claude
