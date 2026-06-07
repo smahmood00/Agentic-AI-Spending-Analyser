@@ -85,7 +85,8 @@ def _load_cache(path: Path) -> dict[str, dict]:
     if not path.exists():
         return {}
     with open(path) as f:
-        return json.load(f)
+        content = f.read().strip()
+    return json.loads(content) if content else {}
 
 
 def _save_cache(path: Path, cache: dict[str, dict]) -> None:
