@@ -1,0 +1,18 @@
+{
+  "description": "Hand-labeled gold set for the categorizer. Each entry is one transaction with the expected category/subcategory and where the label should come from (rule | llm | hitl). 'hitl_required' rows must trigger HITL on a cold run.",
+  "transactions": [
+    {"row_id": 1, "date": "2026-04-13", "description": "TO PAYME(HSBC)", "reference": "T260412AB675(12APR26)", "amount": -312.00, "expect": {"category": "P2P Transfer", "source_tier": "rule"}, "hitl_required": false},
+    {"row_id": 2, "date": "2026-04-16", "description": "MISS MAHMOOD SANJANA", "reference": "HC12641634518368 16APR", "amount": 1000.00, "expect": {"category": "P2P Transfer", "subcategory": "Unknown Purpose", "source_tier": "hitl"}, "hitl_required": true},
+    {"row_id": 3, "date": "2026-04-16", "description": "TO PAYME(HSBC)", "reference": "T260416UG384(16APR26)", "amount": -210.00, "expect": {"category": "P2P Transfer", "source_tier": "rule"}, "hitl_required": false},
+    {"row_id": 4, "date": "2026-04-16", "description": "ATM WITHDRAWAL", "reference": "ATM WITHDRAWAL (16APR26)", "amount": -500.00, "expect": {"category": "Cash", "source_tier": "rule"}, "hitl_required": false},
+    {"row_id": 5, "date": "2026-04-16", "description": "MISS MAHMOOD SANJANA", "reference": "HC12641634738533 16APR", "amount": 900.00, "expect": {"category": "P2P Transfer", "subcategory": "Unknown Purpose", "source_tier": "cache"}, "hitl_required": false},
+    {"row_id": 6, "date": "2026-04-16", "description": "ATM WITHDRAWAL", "reference": "ATM WITHDRAWAL (16APR26)", "amount": -900.00, "expect": {"category": "Cash", "source_tier": "rule"}, "hitl_required": false},
+    {"row_id": 13, "date": "2026-04-25", "description": "CASH REBATE 3567 CREDIT AS ADVISED", "reference": "POS MDC (25APR26)P", "amount": 0.43, "expect": {"category": "Rebate", "source_tier": "rule"}, "hitl_required": false},
+    {"row_id": 14, "date": "2026-04-25", "description": "MAA INTERNATIONAL", "reference": "POS MDC (25APR26)P", "amount": -106.26, "expect": {"source_tier": "llm"}, "hitl_required": false},
+    {"row_id": 19, "date": "2026-05-02", "description": "CAPCUT", "reference": "POS MDC (02MAY26)P", "amount": -118.00, "expect": {"source_tier": "llm"}, "hitl_required": false},
+    {"row_id": 21, "date": "2026-05-04", "description": "ELEVENLABS.IO", "reference": "MDC P (04MAY26)", "amount": -47.22, "expect": {"source_tier": "llm"}, "hitl_required": false},
+    {"row_id": 27, "date": "2026-05-06", "description": "LUNG FUNG MALL", "reference": "POS MDC (06MAY26)P", "amount": -76.00, "expect": {"source_tier": "llm"}, "hitl_required": false},
+    {"row_id": 30, "date": "2026-05-06", "description": "HSBC VISA GOLD CARD PAYMENT", "reference": "N50651730289(06MAY26)", "amount": -2422.50, "expect": {"category": "Credit Card Payment", "source_tier": "rule"}, "hitl_required": false},
+    {"row_id": 34, "date": "2026-05-09", "description": "KYLE NGUYEN", "reference": "POS MDC (09MAY26)P", "amount": -24.43, "expect": {"source_tier": "llm"}, "hitl_required": false}
+  ]
+}
