@@ -60,6 +60,10 @@ HANGSENG_REFERENCE_RE = re.compile(
     r"HD\d+\s+\d{1,2}[A-Z]{3}"  # e.g. HD12630392630864 03MAR
 )
 
+# Hang Seng prints "( DR=Debit )" / "( CR=Credit )" as column labels inside the
+# transaction description area. Strip them so they don't pollute merchant names.
+HANGSENG_DR_CR_RE = re.compile(r"\(\s*[DC]R=[^)]+\)\s*", re.IGNORECASE)
+
 CSV_COLUMNS = ["date", "description", "reference", "type", "deposit", "withdrawal", "balance", "note"]
 
 
@@ -282,7 +286,7 @@ def _classify_rows(rows: list[Row]) -> list[Transaction]:
             desc_lines = [t for t in buffered_text if not _looks_like_reference(t)]
             ref_lines = [t for t in buffered_text if _looks_like_reference(t)]
 
-            description = " ".join(desc_lines).strip()
+            description = HANGSENG_DR_CR_RE.sub("", " ".join(desc_lines)).strip()
             reference = " ".join(ref_lines).strip() or pending_pos_mdc_ref
 
             # ATM WITHDRAWAL: description + reference combined in one row.
