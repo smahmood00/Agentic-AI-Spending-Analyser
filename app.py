@@ -82,7 +82,7 @@ def _build_thread_config(app_cfg: dict) -> dict:
 def render_upload() -> None:
     st.subheader("Upload Bank Statement")
     uploaded = st.file_uploader(
-        "HSBC or Hang Seng eStatement (PDF or CSV)",
+        "(PDF or CSV)",
         type=["pdf", "csv"],
     )
     if uploaded is None:
@@ -135,7 +135,9 @@ def render_upload() -> None:
         st.session_state.hitl_pending = snapshot.tasks[0].interrupts[0].value
         st.session_state.stage = "hitl"
     else:
-        st.session_state.stage = "running"
+        # No HITL needed — pipeline already ran to completion.
+        st.session_state.result = snapshot.values
+        st.session_state.stage = "done"
 
     st.rerun()
 
@@ -143,6 +145,23 @@ def render_upload() -> None:
 # ── Stage: hitl ───────────────────────────────────────────────────────────────
 
 def render_hitl() -> None:
+    # Second pass: form already submitted — run the pipeline with a full-screen spinner.
+    # The form is not rendered so the button cannot be clicked again.
+    if st.session_state.get("hitl_processing"):
+        with st.spinner("Running analysis — this may take up to 30 seconds..."):
+            st.session_state.pipeline.invoke(
+                Command(resume=st.session_state.pop("hitl_user_labels")),
+                config=st.session_state.thread_config,
+            )
+        st.session_state.result = st.session_state.pipeline.get_state(
+            st.session_state.thread_config
+        ).values
+        del st.session_state["hitl_processing"]
+        st.session_state.stage = "done"
+        st.rerun()
+        return
+
+    # First pass: show the labelling form.
     pending: list[dict] = st.session_state.hitl_pending
     st.subheader(f"Review Transactions — {len(pending)} item(s) need your input")
     st.caption(
@@ -183,12 +202,9 @@ def render_hitl() -> None:
         submitted = st.form_submit_button("Submit & Continue", type="primary")
 
     if submitted:
-        # Resume the graph with user-provided labels.
-        st.session_state.pipeline.invoke(
-            Command(resume=user_labels),
-            config=st.session_state.thread_config,
-        )
-        st.session_state.stage = "running"
+        # Save labels and rerun — the second pass will show the spinner and run the pipeline.
+        st.session_state.hitl_user_labels = user_labels
+        st.session_state.hitl_processing = True
         st.rerun()
 
 
