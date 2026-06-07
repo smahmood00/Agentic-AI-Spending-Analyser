@@ -24,12 +24,13 @@ from src.llm_client import LLMClient
 
 # Human-readable label for each node shown in progress output.
 _NODE_LABELS = {
-    "parse":        "[1/6] Parsing statement",
-    "categorize":   "[2/6] Categorising transactions",
-    "human_review": "[3/6] Human review",
-    "analyze":      "[4/6] Computing metrics",
-    "report":       "[5/6] Generating report",
-    "critique":     "[6/6] Critic review",
+    "extract":      "[1/7] Extracting statement",
+    "parse":        "[2/7] Parsing transactions",
+    "categorize":   "[3/7] Categorising transactions",
+    "human_review": "[4/7] Human review",
+    "analyze":      "[5/7] Computing metrics",
+    "report":       "[6/7] Generating report",
+    "critique":     "[7/7] Critic review",
 }
 
 
@@ -51,7 +52,8 @@ def main() -> int:
     }
 
     initial_state = PipelineState(
-        csv_path=args.csv_path,
+        input_path=args.input_path,
+        csv_path=None,
         parsed=None,
         cat_result=None,
         hitl_pending=[],
@@ -142,8 +144,8 @@ def _print_cost_summary(log_path: Path) -> None:
 # ── Argument parsing ──────────────────────────────────────────────────────────
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="AI Financial Analyst")
-    parser.add_argument("csv_path", help="Path to bank statement CSV")
+    parser = argparse.ArgumentParser(description="AI Spending Analyst")
+    parser.add_argument("input_path", help="Path to bank statement (PDF or CSV)")
     parser.add_argument("--config", default=str(ROOT / "config.yaml"))
     return parser.parse_args()
 

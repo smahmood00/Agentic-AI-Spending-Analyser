@@ -24,6 +24,7 @@ from src.categorizer import (
 from src.critic import review
 from src.llm_client import LLMClient
 from src.parser import parse_csv
+from src.pdf_extractor import extract_statement
 from src.reporter import generate_report
 
 from .state import PipelineState
@@ -42,7 +43,19 @@ def _cfg(config: RunnableConfig) -> dict:
     return config["configurable"]["app_config"]
 
 
-# ── Node 1: parse ─────────────────────────────────────────────────────────────
+# ── Node 1: extract ───────────────────────────────────────────────────────────
+
+def extract_node(state: PipelineState, _config: RunnableConfig) -> dict:
+    """Convert a PDF bank statement to CSV. Pass-through if input is already a CSV."""
+    path = Path(state["input_path"])
+    if path.suffix.lower() == ".pdf":
+        csv_path = extract_statement(path, path.with_suffix(".csv"))
+    else:
+        csv_path = path
+    return {"csv_path": str(csv_path)}
+
+
+# ── Node 2: parse ─────────────────────────────────────────────────────────────
 
 def parse_node(state: PipelineState, config: RunnableConfig) -> dict:
     """Parse the bank statement CSV into a structured DataFrame."""

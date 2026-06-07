@@ -1,4 +1,4 @@
-"""Streamlit UI for the AI Financial Analyst pipeline.
+"""Streamlit UI for the AI Spending Analyst pipeline.
 
 Stages (tracked in st.session_state.stage):
   upload  → user uploads a PDF or CSV bank statement
@@ -33,7 +33,6 @@ from src.categorizer import CATEGORIES
 from src.graph import build_pipeline
 from src.graph.state import PipelineState
 from src.llm_client import LLMClient
-from src.pdf_extractor import extract_statement
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -94,25 +93,20 @@ def render_upload() -> None:
     app_cfg = _load_config()
 
     with st.status("Preparing...", expanded=True) as status:
-        # Extract PDF to CSV if necessary.
+        # Save the uploaded file to a temp path — the extract_node inside the
+        # graph handles PDF → CSV conversion, so no pre-processing needed here.
         suffix = ".pdf" if uploaded.name.lower().endswith(".pdf") else ".csv"
         with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
             tmp.write(uploaded.read())
             tmp_path = Path(tmp.name)
 
-        if suffix == ".pdf":
-            st.write("Extracting PDF to CSV...")
-            csv_path = extract_statement(tmp_path, tmp_path.with_suffix(".csv"))
-        else:
-            csv_path = tmp_path
-
-        # Build the pipeline once per session so MemorySaver persists across rerenders.
         pipeline = build_pipeline()
         thread_config = _build_thread_config(app_cfg)
 
-        st.write("Running categorisation (LLM call on cold run)...")
+        st.write("Extracting and categorising (LLM call on cold run)...")
         initial_state = PipelineState(
-            csv_path=str(csv_path),
+            input_path=str(tmp_path),
+            csv_path=None,
             parsed=None,
             cat_result=None,
             hitl_pending=[],
@@ -301,11 +295,11 @@ def render_done() -> None:
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 st.set_page_config(
-    page_title="AI Financial Analyst",
+    page_title="AI Spending Analyst",
     page_icon=":bar_chart:",
     layout="wide",
 )
-st.title("AI Financial Analyst")
+st.title("AI Spending Analyst")
 
 if "stage" not in st.session_state:
     st.session_state.stage = "upload"

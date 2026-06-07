@@ -10,7 +10,8 @@ from typing import Optional, TypedDict
 
 class PipelineState(TypedDict):
     # ── Input ──────────────────────────────────────────────────────────────────
-    csv_path: str
+    input_path: str          # original upload — PDF or CSV
+    csv_path: Optional[str]  # set by extract_node; CSV ready for parsing
 
     # ── Per-stage outputs ──────────────────────────────────────────────────────
     # Types are kept as Any-compatible to avoid circular imports and to

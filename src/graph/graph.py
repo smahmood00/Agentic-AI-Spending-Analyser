@@ -38,6 +38,7 @@ from .nodes import (
     analyze_node,
     categorize_node,
     critique_node,
+    extract_node,
     human_review_node,
     parse_node,
     report_node,
@@ -75,6 +76,7 @@ def build_pipeline(checkpointer=None):
     builder = StateGraph(PipelineState)
 
     # ── Nodes ─────────────────────────────────────────────────────────────────
+    builder.add_node("extract",      extract_node)
     builder.add_node("parse",        parse_node)
     builder.add_node("categorize",   categorize_node)
     builder.add_node("human_review", human_review_node)
@@ -83,7 +85,8 @@ def build_pipeline(checkpointer=None):
     builder.add_node("critique",     critique_node)
 
     # ── Edges ──────────────────────────────────────────────────────────────────
-    builder.set_entry_point("parse")
+    builder.set_entry_point("extract")
+    builder.add_edge("extract",      "parse")
     builder.add_edge("parse",        "categorize")
     builder.add_conditional_edges("categorize",  route_after_categorize)
     builder.add_edge("human_review", "analyze")
