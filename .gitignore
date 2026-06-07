@@ -1,0 +1,15 @@
+.env
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+logs/
+metrics.json
+report.md
+data/merchant_labels.json
+.DS_Store
+data/
+output/
+.claude

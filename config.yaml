@@ -1,0 +1,21 @@
+openrouter:
+  base_url: https://openrouter.ai/api/v1
+  timeout_seconds: 60
+  max_retries: 3
+  initial_backoff_seconds: 2
+
+models:
+  categorizer: anthropic/claude-haiku-4.5
+  reporter: anthropic/claude-sonnet-4.5
+  critic: anthropic/claude-sonnet-4.5
+
+thresholds:
+  llm_confidence_min: 0.75
+  recurring_min_occurrences: 3
+  anomaly_iqr_multiplier: 1.5
+
+paths:
+  merchant_labels: data/merchant_labels.json
+  metrics_out: metrics.json
+  report_out: report.md
+  llm_call_log: logs/llm_calls.jsonl
