@@ -1,11 +1,15 @@
 """CSV → cleaned pandas DataFrame for downstream agents."""
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
 
 import pandas as pd
+
+# Hang Seng embeds "(DR=Debit)" / "(CR=Credit)" labels in the description column.
+_HANGSENG_DR_CR_RE = re.compile(r"\(\s*[DC]R=[^)]+\)\s*", re.IGNORECASE)
 
 REQUIRED_COLUMNS = [
     "date",
@@ -69,6 +73,7 @@ def parse_csv(path: str | Path, today: date | None = None) -> ParsedStatement:
         raise ValueError(f"CSV missing required columns: {missing}")
 
     df = df[REQUIRED_COLUMNS].copy()
+    df["description"] = df["description"].str.replace(_HANGSENG_DR_CR_RE, "", regex=True).str.strip()
     df["date"] = _infer_dates(df["date"].tolist(), today)
 
     for col in ("deposit", "withdrawal", "balance"):

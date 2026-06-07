@@ -280,13 +280,15 @@ def _classify_rows(rows: list[Row]) -> list[Transaction]:
             continue
 
         if row.text:
-            buffered_text.append(row.text)
+            clean = HANGSENG_DR_CR_RE.sub("", row.text).strip()
+            if clean:
+                buffered_text.append(clean)
 
         if row.deposit is not None or row.withdrawal is not None:
             desc_lines = [t for t in buffered_text if not _looks_like_reference(t)]
             ref_lines = [t for t in buffered_text if _looks_like_reference(t)]
 
-            description = HANGSENG_DR_CR_RE.sub("", " ".join(desc_lines)).strip()
+            description = " ".join(desc_lines).strip()
             reference = " ".join(ref_lines).strip() or pending_pos_mdc_ref
 
             # ATM WITHDRAWAL: description + reference combined in one row.
