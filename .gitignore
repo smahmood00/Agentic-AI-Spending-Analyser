@@ -11,5 +11,6 @@ report.md
 data/merchant_labels.json
 .DS_Store
 data/*
+!data/.gitkeep
 output/
 .claude
