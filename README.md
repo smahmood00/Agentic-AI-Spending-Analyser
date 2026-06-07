@@ -1,17 +1,24 @@
-# AI Financial Analyst
+# AI Spending Analyst
 
-An agentic application that processes HSBC and Hang Seng bank statements (PDF or CSV) and produces a structured spending report. Built on a **LangGraph** multi-agent pipeline with human-in-the-loop categorisation, LLM-based reporting, and a critic reflection pass.
+An agentic application that processes bank statements (PDF or CSV) and produces a structured spending report. Built on a **LangGraph** multi-agent pipeline with human-in-the-loop categorisation, LLM-based reporting, and a critic reflection pass.
 
 ---
 
 ## Architecture
 
+![LangGraph pipeline](architecture.png)
+
 ```
-PDF / CSV upload
+PDF / CSV input
       │
       ▼
 ┌─────────────┐
-│    parse    │  Deterministic — pandas CSV parser
+│   extract   │  PyMuPDF word-bbox extraction → CSV (pass-through if already CSV)
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│    parse    │  Deterministic — pandas CSV → typed DataFrame
 └──────┬──────┘
        │
        ▼
@@ -48,7 +55,7 @@ PDF / CSV upload
 
 | Pattern | Where |
 |---|---|
-| **Multi-agent** | Six specialised nodes coordinated by LangGraph StateGraph |
+| **Multi-agent** | Seven specialised nodes coordinated by LangGraph StateGraph |
 | **Human-in-the-loop** | `interrupt()` pauses the graph; `Command(resume=)` continues it after user labels |
 | **Reflection** | Critic LLM reviews the Reporter's draft against `metrics.json`; rejects grounding violations |
 | **Conditional edges** | Skip HITL when cache/rules cover all transactions; limit critic to one revision cycle |
@@ -95,13 +102,17 @@ cp .env.example .env
 streamlit run app.py
 ```
 
-1. Upload a PDF or CSV bank statement (HSBC or Hang Seng).
+1. Upload a PDF or CSV bank statement.
 2. If any transactions need labelling, a form appears — pick from the category list or type a custom one.
 3. The pipeline resumes automatically and displays the report with download buttons (Markdown + PDF).
 
 ### CLI
 
 ```bash
+# PDF input
+python src/main.py data/statement.pdf
+
+# CSV input
 python src/main.py data/statement.csv
 ```
 
@@ -112,13 +123,14 @@ The pipeline streams node-level progress to stdout and prompts for labels via `s
 ## Project structure
 
 ```
-ai-financial-analyst/
+ai-spending-analyst/
 ├── app.py                          Streamlit UI (upload → HITL → report)
 ├── config.yaml                     Models, thresholds, paths
 ├── requirements.txt
 ├── .env.example
+├── architecture.png                LangGraph pipeline diagram
 ├── src/
-│   ├── pdf_extractor.py            PDF → CSV (HSBC + Hang Seng, PyMuPDF word-bbox)
+│   ├── pdf_extractor.py            PDF → CSV (PyMuPDF word-bbox extraction)
 │   ├── parser.py                   CSV → typed DataFrame
 │   ├── categorizer.py              3-tier: cache → rules → batched LLM → HITL
 │   ├── analyst.py                  Pandas aggregations → metrics.json
@@ -140,7 +152,9 @@ ai-financial-analyst/
 
 ## The agents
 
-**Parser** — loads CSV, infers year for `DD Mon` dates (handles Dec→Jan rollover), computes signed `amount`, forward-fills balance.
+**Extractor** — runs only when the input is a PDF. Uses PyMuPDF word bboxes and visual row grouping (y-coordinate rounding) to reconstruct the tabular structure from raw PDF text. Classifies words into columns by x-position boundaries derived from the detected header row.
+
+**Parser** — loads the CSV, infers full year for `DD Mon` dates (handles Dec→Jan rollover), computes signed `amount`, forward-fills balance.
 
 **Categoriser** — three tiers, LLM only as last resort:
 1. Cache lookup (`data/merchant_labels.json`) — warm runs skip LLM entirely.
@@ -154,8 +168,6 @@ HITL fires for P2P transfers to person names and for any LLM label below the con
 **Reporter** — receives only `metrics.json` (no raw transactions). Produces a 7-section Markdown report. The prompt explicitly forbids invented numbers, invented merchants, and purpose inference for P2P items.
 
 **Critic** — reflects on the draft against `metrics.json`. Rejects: unsupported numbers, P2P purpose inference, false recurrence claims, prescriptive financial advice. The graph allows at most one revision pass.
-
-**PDF Extractor** — uses PyMuPDF word bboxes and visual row grouping (y-coordinate rounding) to reconstruct the tabular structure from raw PDF text. Classifies words into columns by x-position boundaries derived from the header row. Handles both HSBC and Hang Seng statement formats using bank-specific reference code regexes and footer markers.
 
 ---
 
